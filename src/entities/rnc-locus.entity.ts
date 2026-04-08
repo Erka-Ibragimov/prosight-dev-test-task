@@ -20,7 +20,7 @@ const bigIntTransformer: ValueTransformer = {
 @Entity('rnc_locus')
 export class RncLocus {
   @ApiProperty({ type: Number, example: 1 })
-  @PrimaryColumn({ type: 'integer' })
+  @PrimaryColumn({ type: 'bigint', transformer: bigIntTransformer })
   id!: number;
 
   @ApiProperty({ type: String, nullable: true, example: 'GRCh38' })
