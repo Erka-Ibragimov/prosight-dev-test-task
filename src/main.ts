@@ -30,8 +30,8 @@ async function bootstrap() {
   const swaggerDocument = SwaggerModule.createDocument(app, swaggerConfig);
   SwaggerModule.setup('docs', app, swaggerDocument);
 
-  const port = configService.get<string>('PORT')!;
-  const hostname = configService.get<string>('HOSTNAME')!;
+  const port = configService.get<string>('app.port')!;
+  const hostname = configService.get<string>('app.hostname')!;
 
   await app.listen(port, hostname, () => {
     console.log(`App listening on ${hostname}:${port}`);

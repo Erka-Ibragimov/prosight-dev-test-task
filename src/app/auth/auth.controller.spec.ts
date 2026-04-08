@@ -28,7 +28,7 @@ describe('AuthController', () => {
   });
 
   it('delegates auth call to service', async () => {
-    const payload = { login: 'admin' };
+    const payload = { login: 'admin', password: 'admin' };
     const expected = { accessToken: 'token' };
     authMock.mockResolvedValue(expected);
 

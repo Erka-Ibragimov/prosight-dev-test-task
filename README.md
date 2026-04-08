@@ -67,7 +67,8 @@ Swagger:
 
 ```json
 {
-  "login": "admin"
+  "login": "admin",
+  "password": "admin"
 }
 ```
 
