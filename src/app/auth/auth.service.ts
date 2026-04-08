@@ -1,7 +1,12 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import {
+  HttpException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { AuthDto } from './dto/auth.dto';
 import { mockUsers } from 'src/mock/user';
 import { JwtService } from '@nestjs/jwt';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +17,12 @@ export class AuthService {
 
     if (!existUser) {
       throw new HttpException('User not fount', 404);
+    }
+
+    const isMatch = await bcrypt.compare(data.password, existUser.password);
+
+    if (!isMatch) {
+      throw new UnauthorizedException('Invalid credentials');
     }
 
     return {

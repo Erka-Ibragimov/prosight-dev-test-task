@@ -10,6 +10,15 @@ export class AuthDto {
   })
   @IsString()
   login!: string;
+
+  @ApiProperty({
+    type: String,
+    required: true,
+    description: 'User password to authenticate',
+    example: 'admin',
+  })
+  @IsString()
+  password!: string;
 }
 
 export class AuthResponseDto {
