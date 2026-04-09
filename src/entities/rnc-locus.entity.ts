@@ -1,21 +1,7 @@
-import {
-  Column,
-  Entity,
-  OneToMany,
-  PrimaryColumn,
-  ValueTransformer,
-} from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { RncLocusMember } from './rnc-locus-member.entity';
-
-const bigIntTransformer: ValueTransformer = {
-  to: (value: bigint | null) => (value === null ? null : value.toString()),
-  from: (value: string | bigint | null) => {
-    if (value === null || value === undefined) return null;
-    if (typeof value === 'bigint') return value;
-    return BigInt(value);
-  },
-};
+import { bigIntTransformer } from 'src/common/utils';
 
 @Entity('rnc_locus')
 export class RncLocus {

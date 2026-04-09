@@ -31,7 +31,24 @@ describe('LocusController', () => {
   it('delegates getLocus call to service with user and query', async () => {
     const user = { login: 'admin', role: RoleUser.ADMIN };
     const query = { limit: 10, offset: 0 };
-    const expected = [{ id: 1 }];
+    const expected = {
+      total: 1,
+      page: 1,
+      limit: 10,
+      data: [
+        {
+          id: 1,
+          assemblyId: null,
+          locusName: null,
+          publicLocusName: null,
+          chromosome: null,
+          strand: null,
+          locusStart: null,
+          locusStop: null,
+          memberCount: null,
+        },
+      ],
+    };
     getLocusMock.mockResolvedValue(expected);
 
     const result = await controller.getLocus(user, query);

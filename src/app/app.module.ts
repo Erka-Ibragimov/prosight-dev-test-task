@@ -29,6 +29,9 @@ import { SnakeNamingStrategy } from 'src/typeorm/snake-naming.strategy';
         entities: [RncLocus, RncLocusMember],
         namingStrategy: new SnakeNamingStrategy(),
         synchronize: false,
+        extra: {
+          statement_timeout: 30000,
+        },
       }),
       inject: [ConfigService],
     }),

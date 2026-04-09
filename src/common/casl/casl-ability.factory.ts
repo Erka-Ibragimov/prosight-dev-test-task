@@ -10,8 +10,6 @@ import { CurrentUser } from '../types';
 export enum Action {
   Read = 'read',
   Sideload = 'sideload',
-  FilterByRegion = 'filterByRegion',
-  FilterByMembership = 'filterByMembership',
   UseLimitedRegions = 'useLimitedRegions',
 }
 
@@ -27,15 +25,11 @@ export class CaslAbilityFactory {
 
     if (user.role === RoleUser.ADMIN) {
       can(Action.Sideload, 'Locus');
-      can(Action.FilterByRegion, 'Locus');
-      can(Action.FilterByMembership, 'Locus');
       return build();
     }
 
     if (user.role === RoleUser.LIMITED) {
       can(Action.Sideload, 'Locus');
-      can(Action.FilterByRegion, 'Locus');
-      can(Action.FilterByMembership, 'Locus');
       can(Action.UseLimitedRegions, 'Locus');
     }
 

@@ -10,8 +10,14 @@ import {
 import { RncLocus } from '../../entities/rnc-locus.entity';
 import { RncLocusMember } from '../../entities/rnc-locus-member.entity';
 import { CurrentUser } from '../../common/types';
-import { defaultLimit } from '../../common/constants';
-import { Action, AppAbility, CaslAbilityFactory } from '../../common/casl/casl-ability.factory';
+import { defaultLimit, defaultOffset } from '../../common/constants';
+import { LocusListResponseDto } from './dto/locus-list-response.dto';
+import { toLocusItemResponse } from './locus.mapper';
+import {
+  Action,
+  AppAbility,
+  CaslAbilityFactory,
+} from '../../common/casl/casl-ability.factory';
 
 const LOCUS_ORDER_FIELD: Record<LocusSortField, keyof RncLocus> = {
   [LocusSortField.id]: 'id',
@@ -30,19 +36,27 @@ export class LocusService {
 
   private static readonly limitedRegionIds = [86118093, 86696489, 88186467];
 
-  public async getLocus(user: CurrentUser, query: GetLocusDto) {
+  public async getLocus(
+    user: CurrentUser,
+    query: GetLocusDto,
+  ): Promise<LocusListResponseDto> {
     const ability = this.caslAbilityFactory.createForUser(user);
     this.validateAccessByRole(ability, query);
+
+    const limit = query.limit ?? defaultLimit;
+    const offset = query.offset ?? defaultOffset;
+    const page = Math.floor(offset / limit) + 1;
 
     const regionIds = this.resolveRegionIds(ability, query.regionId);
 
     const shouldApplyRegionFilter =
-      ability.can(Action.UseLimitedRegions, 'Locus') || Boolean(query.regionId?.length);
+      ability.can(Action.UseLimitedRegions, 'Locus') ||
+      Boolean(query.regionId?.length);
     const needMemberFilter =
       shouldApplyRegionFilter || Boolean(query.membershipStatus);
 
     if (needMemberFilter && shouldApplyRegionFilter && regionIds.length === 0) {
-      return [];
+      return { total: 0, page, limit, data: [] };
     }
 
     const where: FindOptionsWhere<RncLocus> = {
@@ -61,13 +75,23 @@ export class LocusService {
 
     const includeMembers = query.sideload === SideloadEnum.locusMembers;
 
-    return this.rncLocusRepository.find({
-      where,
-      order: { [sortField]: sortDir },
-      skip: query.offset ?? 0,
-      take: query.limit ?? defaultLimit,
-      relations: includeMembers ? { locusMembers: true } : {},
-    });
+    const [total, data] = await Promise.all([
+      this.rncLocusRepository.count({ where }),
+      this.rncLocusRepository.find({
+        where,
+        order: { [sortField]: sortDir },
+        skip: offset,
+        take: limit,
+        relations: includeMembers ? { locusMembers: true } : {},
+      }),
+    ]);
+
+    return {
+      total,
+      page,
+      limit,
+      data: data.map(toLocusItemResponse),
+    };
   }
 
   private buildMemberWhere(
@@ -83,19 +107,6 @@ export class LocusService {
   private validateAccessByRole(ability: AppAbility, query: GetLocusDto): void {
     if (query.sideload && ability.cannot(Action.Sideload, 'Locus')) {
       throw new ForbiddenException('Sideloading is not allowed for this user');
-    }
-
-    if (query.regionId?.length && ability.cannot(Action.FilterByRegion, 'Locus')) {
-      throw new ForbiddenException('regionId filter is not allowed for this user');
-    }
-
-    if (
-      query.membershipStatus &&
-      ability.cannot(Action.FilterByMembership, 'Locus')
-    ) {
-      throw new ForbiddenException(
-        'membershipStatus filter is not allowed for this user',
-      );
     }
   }
 

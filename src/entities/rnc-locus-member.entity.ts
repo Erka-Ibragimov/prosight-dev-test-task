@@ -1,6 +1,7 @@
 import { Column, Entity, JoinColumn, ManyToOne, PrimaryColumn } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
 import { RncLocus } from './rnc-locus.entity';
+import { bigIntTransformer } from 'src/common/utils';
 
 @Entity('rnc_locus_members')
 export class RncLocusMember {
@@ -9,11 +10,15 @@ export class RncLocusMember {
   regionId!: number;
 
   @ApiProperty({ type: Number, nullable: true, example: 86118093 })
-  @PrimaryColumn({ type: 'integer', name: 'locus_id' })
+  @PrimaryColumn({
+    type: 'integer',
+    name: 'locus_id',
+    transformer: bigIntTransformer,
+  })
   locusId!: number | null;
 
   @ApiProperty({ type: Number, example: 1001 })
-  @PrimaryColumn({ type: 'bigint', name: 'id' })
+  @PrimaryColumn({ type: 'bigint', name: 'id', transformer: bigIntTransformer })
   locusMemberId!: number;
 
   @ApiProperty({ type: String, nullable: true, example: 'URS0000A888AB_61622' })

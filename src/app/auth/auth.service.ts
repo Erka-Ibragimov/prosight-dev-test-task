@@ -16,7 +16,7 @@ export class AuthService {
     const existUser = mockUsers.find((user) => user.login === data.login);
 
     if (!existUser) {
-      throw new HttpException('User not fount', 404);
+      throw new HttpException('User not found', 404);
     }
 
     const isMatch = await bcrypt.compare(data.password, existUser.password);

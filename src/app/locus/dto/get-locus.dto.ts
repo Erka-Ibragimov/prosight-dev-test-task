@@ -6,6 +6,7 @@ import {
   IsOptional,
   IsPositive,
   IsString,
+  Min,
 } from 'class-validator';
 import { NumberArrayQueryParam } from '../../../common/decorators/number-array-query.decorator';
 
@@ -75,6 +76,7 @@ export class GetLocusDto {
   })
   @IsOptional()
   @Transform(({ value }) => Number(value))
+  @Min(0)
   @IsNumber()
   offset?: number;
 

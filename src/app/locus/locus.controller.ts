@@ -11,7 +11,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
-import { RncLocus } from '../../entities/rnc-locus.entity';
+import { LocusListResponseDto } from './dto/locus-list-response.dto';
 
 @ApiTags('Locus')
 @ApiBearerAuth()
@@ -22,9 +22,8 @@ export class LocusController {
   @Get()
   @ApiOperation({ summary: 'Get locus list with filters and sorting' })
   @ApiOkResponse({
-    description: 'Returns list of locus records',
-    type: RncLocus,
-    isArray: true,
+    description: 'Paginated list of locus records',
+    type: LocusListResponseDto,
   })
   @ApiBadRequestResponse({ description: 'Invalid query or forbidden filter set' })
   @ApiUnauthorizedResponse({ description: 'Missing or invalid bearer token' })

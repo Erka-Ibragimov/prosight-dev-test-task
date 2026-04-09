@@ -11,14 +11,18 @@ import {
 } from './dto/get-locus.dto';
 import { LocusService } from './locus.service';
 import { CaslAbilityFactory } from '../../common/casl/casl-ability.factory';
+import { toLocusItemResponse } from './locus.mapper';
 
 describe('LocusService', () => {
   let service: LocusService;
   const locusFindMock = jest.fn();
+  const locusCountMock = jest.fn();
 
   beforeEach(async () => {
     locusFindMock.mockReset();
+    locusCountMock.mockReset();
     locusFindMock.mockResolvedValue([]);
+    locusCountMock.mockResolvedValue(0);
 
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -28,6 +32,7 @@ describe('LocusService', () => {
           provide: getRepositoryToken(RncLocus),
           useValue: {
             find: locusFindMock,
+            count: locusCountMock,
           },
         },
       ],
@@ -41,8 +46,30 @@ describe('LocusService', () => {
   });
 
   it('applies all admin filters, sorting, paging and sideload relation', async () => {
-    const expectedResult = [{ id: 1 }];
-    locusFindMock.mockResolvedValue(expectedResult);
+    const rows = [
+      {
+        id: 1,
+        assemblyId: null,
+        locusName: null,
+        publicLocusName: null,
+        chromosome: null,
+        strand: null,
+        locusStart: null,
+        locusStop: null,
+        memberCount: null,
+        locusMembers: [
+          {
+            regionId: 86118093,
+            locusId: 1,
+            locusMemberId: 100,
+            ursTaxid: null,
+            membershipStatus: 'member',
+          },
+        ],
+      },
+    ] as RncLocus[];
+    locusFindMock.mockResolvedValue(rows);
+    locusCountMock.mockResolvedValue(10);
 
     const result = await service.getLocus(
       { login: 'admin', role: RoleUser.ADMIN },
@@ -59,7 +86,24 @@ describe('LocusService', () => {
       },
     );
 
-    expect(result).toEqual(expectedResult);
+    expect(result).toEqual({
+      total: 10,
+      page: 1,
+      limit: 5,
+      data: rows.map(toLocusItemResponse),
+    });
+    expect(locusCountMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          id: expect.anything(),
+          assemblyId: 'GRCh38',
+          locusMembers: expect.objectContaining({
+            regionId: expect.anything(),
+            membershipStatus: 'member',
+          }),
+        }),
+      }),
+    );
     expect(locusFindMock).toHaveBeenCalledWith(
       expect.objectContaining({
         where: expect.objectContaining({
@@ -88,14 +132,23 @@ describe('LocusService', () => {
     expect(locusFindMock).not.toHaveBeenCalled();
   });
 
-  it('rejects region and membership filters for normal user', async () => {
-    await expect(
-      service.getLocus(
-        { login: 'normal', role: RoleUser.NORMAL },
-        { regionId: [86118093], membershipStatus: 'member' },
-      ),
-    ).rejects.toBeInstanceOf(ForbiddenException);
-    expect(locusFindMock).not.toHaveBeenCalled();
+  it('allows normal user to filter by regionId and membershipStatus (no sideload)', async () => {
+    await service.getLocus(
+      { login: 'normal', role: RoleUser.NORMAL },
+      { regionId: [86118093], membershipStatus: 'member' },
+    );
+
+    expect(locusFindMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: expect.objectContaining({
+          locusMembers: expect.objectContaining({
+            regionId: expect.anything(),
+            membershipStatus: 'member',
+          }),
+        }),
+        relations: {},
+      }),
+    );
   });
 
   it('uses default limited region list when limited user passes no regionId', async () => {
@@ -142,7 +195,13 @@ describe('LocusService', () => {
     );
 
     expect(locusFindMock).not.toHaveBeenCalled();
-    expect(result).toEqual([]);
+    expect(locusCountMock).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      total: 0,
+      page: 1,
+      limit: defaultLimit,
+      data: [],
+    });
   });
 
   it('does not apply member filter when admin has no regionId and membershipStatus', async () => {

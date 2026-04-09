@@ -70,6 +70,14 @@ Swagger:
   "login": "admin",
   "password": "123"
 }
+{
+  "login": "normal",
+  "password": "123"
+}
+{
+  "login": "limited",
+  "password": "123"
+}
 ```
 
 Returns:
@@ -96,11 +104,11 @@ Authorization: Bearer <token>
 
 ### Role Rules (CASL)
 
-For `GET /locus`:
+For `GET /locus`, CASL only restricts **sideload** (`NORMAL` cannot) and **limited region scope** (`LIMITED`). Query filters `regionId` / `membershipStatus` are not ability-gated.
 
-- `ADMIN`: can use all filters and sideloads
-- `NORMAL`: read-only (no `sideload`, no `regionId`, no `membershipStatus`)
-- `LIMITED`: can use filters/sideload, but region filtering is restricted to allowed region ids
+- `ADMIN`: sideload allowed
+- `NORMAL`: no sideload; filters work as in the query DTO
+- `LIMITED`: sideload allowed; region list is restricted to allowed ids (see service)
 
 ## Main Endpoint
 
